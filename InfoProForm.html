@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Information Form</title>
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <style>
+        .error {
+            color: red;
+        }
+
+        .progress-bar {
+            width: 0;
+            height: 10px;
+            background-color: #4CAF50;
+        }
+
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 120px;
+            background-color: black;
+            color: #fff;
+            text-align: center;
+            border-radius: 5px;
+            padding: 5px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -60px;
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+        }
+    </style>
+</head>
+
+<body class="w3-container">
+
+    <h2 class="w3-center">User Information Form</h2>
+
+    <form id="userForm" class="w3-card-4 w3-padding w3-margin" onsubmit="return validateForm()">
+
+        <div class="w3-section">
+            <label for="profilePic">Profile Picture:</label>
+            <input type="file" id="profilePic" class="w3-input" accept="image/*" onchange="previewProfilePic()">
+            <img id="profilePicPreview" src="" alt="Profile Picture Preview" style="display:none; width:100px; height:100px;">
+        </div>
+
+        <div class="w3-section">
+            <label for="idCard">Identity Card Number:</label>
+            <input type="text" id="idCard" class="w3-input" maxlength="20" required>
+            <span id="idCardError" class="error"></span>
+        </div>
+
+        <div class="w3-section">
+            <label for="fullName">Full Name:</label>
+            <input type="text" id="fullName" class="w3-input" maxlength="50" required>
+            <span id="fullNameError" class="error"></span>
+            <span id="nameCharCount" class="w3-right"></span>
+        </div>
+
+        <div class="w3-section">
+            <label for="dob">Date of Birth:</label>
+            <input type="date" id="dob" class="w3-input" required>
+            <span id="dobError" class="error"></span>
+        </div>
+
+        <div class="w3-section">
+            <label for="pob">Place of Birth:</label>
+            <input type="text" id="pob" class="w3-input" required>
+            <span id="pobError" class="error"></span>
+        </div>
+
+        <div class="w3-section">
+            <label for="phone">Cellphone Number:</label>
+            <div class="w3-row">
+                <div class="w3-col s3">
+                    <select id="countryCode" class="w3-select" onchange="updatePhonePlaceholder()">
+                        <option value="+1">North America (+1)</option>
+                        <option value="+44">Europe (+44)</option>
+                        <option value="+91">Asia (+91)</option>
+                        <!-- Add other country codes as needed -->
+                    </select>
+                </div>
+                <div class="w3-col s9">
+                    <input type="tel" id="phone" class="w3-input" placeholder="+1 123-456-7890" required>
+                </div>
+            </div>
+            <span id="phoneError" class="error"></span>
+        </div>
+
+        <div class="w3-section">
+            <label for="education">Level of Education:</label>
+            <input type="text" id="education" class="w3-input" required>
+            <span id="educationError" class="error"></span>
+        </div>
+
+        <div class="w3-section">
+            <label for="occupation">Occupation:</label>
+            <input type="text" id="occupation" class="w3-input" required>
+            <span id="occupationError" class="error"></span>
+        </div>
+
+        <div class="w3-section">
+            <label for="address">Residential Address:</label>
+            <input type="text" id="address" class="w3-input" required>
+            <span id="addressError" class="error"></span>
+        </div>
+
+        <div class="w3-section">
+            <label for="password">Password:</label>
+            <input type="password" id="password" class="w3-input" onkeyup="checkPasswordStrength()" required>
+            <span id="passwordError" class="error"></span>
+            <span id="passwordStrength" class="w3-right"></span>
+        </div>
+
+        <div class="w3-section">
+            <label for="captcha">Captcha:</label>
+            <div id="captchaContainer" class="g-recaptcha" data-sitekey="YOUR_SITE_KEY"></div>
+            <span id="captchaError" class="error"></span>
+        </div>
+
+        <div class="w3-section w3-center">
+            <button type="submit" class="w3-button w3-blue w3-margin-bottom">Submit</button>
+            <button type="button" class="w3-button w3-gray w3-margin-bottom" onclick="confirmResetForm()">Reset</button>
+            <button type="button" class="w3-button w3-green w3-margin-bottom" onclick="printForm()">Print</button>
+            <button type="button" class="w3-button w3-red w3-margin-bottom" onclick="exportToPDF()">Export to PDF</button>
+        </div>
+
+        <div id="progressContainer" class="w3-section">
+            <label>Form Completion Progress:</label>
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+
+        <div id="successMessage" class="w3-panel w3-green w3-hide">
+            <p>Form submitted successfully!</p>
+        </div>
+
+    </form>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.9/flatpickr.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsPDF/2.3.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.9.0/localforage.min.js"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/zxcvbn/4.4.2/zxcvbn.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.5.1/chart.min.js"></script>
+    <script src="https://www.google.com/recaptcha/api.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            loadUserData();
+            document.getElementById('fullName').addEventListener('input', function () {
+                updateCharCount(this, 50, 'nameCharCount');
+            });
+            const autocomplete = new google.maps.places.Autocomplete(document.getElementById('address'));
+            document.getElementById('userForm').addEventListener('input', updateProgressBar);
+        });
+
+        function previewProfilePic() {
+            const file = document.getElementById('profilePic').files[0];
+            const preview = document.getElementById('profilePicPreview');
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                preview.style.display = 'none';
+            }
+        }
+
+        function updatePhonePlaceholder() {
+            const countryCode = document.getElementById('countryCode').value;
+            document.getElementById('phone').placeholder = `${countryCode} 123-456-7890`;
+        }
+
+        function checkPasswordStrength() {
+            const password = document.getElementById('password').value;
+            const result = zxcvbn(password);
+            const strengthText = ['Very Weak', 'Weak', 'Fair', 'Strong', 'Very Strong'];
+            document.getElementById('passwordStrength').textContent = `Strength: ${strengthText[result.score]}`;
+        }
+
+        function validateForm() {
+            let valid = true;
+            const idCard = document.getElementById('idCard').value.trim();
+            const fullName = document.getElementById('fullName').value.trim();
+            const dob = document.getElementById('dob').value;
+            const pob = document.getElementById('pob').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            const education = document.getElementById('education').value.trim();
+            const occupation = document.getElementById('occupation').value.trim();
+            const address = document.getElementById('address').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const captcha = grecaptcha.getResponse();
+
+            if (!idCard.match(/^[A-Za-z0-9]{5,20}$/)) {
+                document.getElementById('idCardError').textContent = 'Invalid ID card number.';
+                valid = false;
+            } else {
+                document.getElementById('idCardError').textContent = '';
+            }
+
+            if (!fullName.match(/^[a-zA-Z\s]{1,50}$/)) {
+                document.getElementById('fullNameError').textContent = 'Invalid name.';
+                valid = false;
+            } else {
+                document.getElementById('fullNameError').textContent = '';
+            }
+
+            if (!dob) {
+                document.getElementById('dobError').textContent = 'Date of birth is required.';
+                valid = false;
+            } else {
+                document.getElementById('dobError').textContent = '';
+            }
+
+            if (!pob) {
+                document.getElementById('pobError').textContent = 'Place of birth is required.';
+                valid = false;
+            } else {
+                document.getElementById('pobError').textContent = '';
+            }
+
+            if (!phone.match(/^\+[0-9]{1,3}\s[0-9]{3}-[0-9]{3}-[0-9]{4}$/)) {
+                document.getElementById('phoneError').textContent = 'Invalid phone number.';
+                valid = false;
+            } else {
+                document.getElementById('phoneError').textContent = '';
+            }
+
+            if (!education) {
+                document.getElementById('educationError').textContent = 'Education level is required.';
+                valid = false;
+            } else {
+                document.getElementById('educationError').textContent = '';
+            }
+
+            if (!occupation) {
+                document.getElementById('occupationError').textContent = 'Occupation is required.';
+                valid = false;
+            } else {
+                document.getElementById('occupationError').textContent = '';
+            }
+
+            if (!address) {
+                document.getElementById('addressError').textContent = 'Address is required.';
+                valid = false;
+            } else {
+                document.getElementById('addressError').textContent = '';
+            }
+
+            if (password.length < 8) {
+                document.getElementById('passwordError').textContent = 'Password must be at least 8 characters.';
+                valid = false;
+            } else {
+                document.getElementById('passwordError').textContent = '';
+            }
+
+            if (!captcha) {
+                document.getElementById('captchaError').textContent = 'Captcha is required.';
+                valid = false;
+            } else {
+                document.getElementById('captchaError').textContent = '';
+            }
+
+            if (valid) {
+                saveUserData();
+                document.getElementById('successMessage').classList.remove('w3-hide');
+            }
+
+            return valid;
+        }
+
+        function updateCharCount(input, maxLength, counterId) {
+            const charCount = input.value.length;
+            document.getElementById(counterId).textContent = `${charCount}/${maxLength}`;
+        }
+
+        function confirmResetForm() {
+            if (confirm('Are you sure you want to reset the form?')) {
+                resetForm();
+            }
+        }
+
+        function resetForm() {
+            document.getElementById('userForm').reset();
+            document.getElementById('profilePicPreview').style.display = 'none';
+            document.querySelectorAll('.error').forEach(error => error.textContent = '');
+            document.getElementById('progressBar').style.width = '0%';
+            document.getElementById('passwordStrength').textContent = '';
+            document.getElementById('successMessage').classList.add('w3-hide');
+            grecaptcha.reset();
+        }
+
+        function printForm() {
+            window.print();
+        }
+
+        function exportToPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.text('User Information Form', 10, 10);
+            const formData = new FormData(document.getElementById('userForm'));
+            let y = 20;
+            formData.forEach((value, key) => {
+                doc.text(`${key}: ${value}`, 10, y);
+                y += 10;
+            });
+            doc.save('user_information_form.pdf');
+        }
+
+        function saveUserData() {
+            const formData = new FormData(document.getElementById('userForm'));
+            const userData = {};
+            formData.forEach((value, key) => {
+                userData[key] = value;
+            });
+            localforage.setItem('userData', userData);
+        }
+
+        function loadUserData() {
+            localforage.getItem('userData').then(userData => {
+                if (userData) {
+                    Object.keys(userData).forEach(key => {
+                        const input = document.getElementById(key);
+                        if (input) {
+                            input.value = userData[key];
+                        }
+                    });
+                }
+            });
+        }
+
+        function updateProgressBar() {
+            const form = document.getElementById('userForm');
+            const totalFields = form.querySelectorAll('input').length;
+            let filledFields = 0;
+            form.querySelectorAll('input').forEach(input => {
+                if (input.value.trim() !== '') {
+                    filledFields++;
+                }
+            });
+            const progress = (filledFields / totalFields) * 100;
+            document.getElementById('progressBar').style.width = `${progress}%`;
+        }
+    </script>
+</body>
+
+</html>
